@@ -83,7 +83,7 @@ def create_image(width, height, pattern, format):
     draw = ImageDraw.Draw(image)
     pattern_name = ''
     date_str = datetime.datetime.now().strftime('%Y%m%d')
-    image_folder = "/Users/michaelhein/Pictures/Testbilder"
+    image_folder = "/Ziel_Verzeichniss"
 
     if pattern == 'Kacheln':
         draw_image_tiles(draw, width, height)
