@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import simpledialog, ttk, messagebox
+from tkinter import simpledialog, ttk, messagebox, filedialog
 from PIL import Image, ImageDraw, ImageFont
 import datetime
 import numpy as np
@@ -22,6 +22,7 @@ SIZES = {
     'Iphone 15 pro': (2556, 1179)
 }
 
+
 class ImageParametersDialog(simpledialog.Dialog):
     def body(self, master):
         tk.Label(master, text="Bildschirmformat:").grid(row=0)
@@ -29,24 +30,30 @@ class ImageParametersDialog(simpledialog.Dialog):
         tk.Label(master, text="Format:").grid(row=2)
         tk.Label(master, text="Breite:").grid(row=3)
         tk.Label(master, text="Höhe:").grid(row=4)
+        tk.Label(master, text='Target directory').grid(row=5)
 
         self.size_var = tk.StringVar()
         self.pattern_var = tk.StringVar()
         self.format_var = tk.StringVar()
         self.width_var = tk.StringVar()
         self.height_var = tk.StringVar()
+        self.directory = tk.StringVar()
 
         self.e1 = ttk.Combobox(master, values=list(SIZES.keys()), textvariable=self.size_var, state='readonly')
         self.e2 = ttk.Combobox(master, values=PATTERNS, textvariable=self.pattern_var)
         self.e3 = ttk.Combobox(master, values=FORMATS, textvariable=self.format_var)
         self.e4 = tk.Entry(master, textvariable=self.width_var)
         self.e5 = tk.Entry(master, textvariable=self.height_var)
+        dir = tk.filedialog.askdirectory(title='Select directory to save image')
+        self.directory.set(dir)
+        self.e6 = tk.Entry(master, textvariable=self.directory)
 
         self.e1.grid(row=0, column=1)
         self.e2.grid(row=1, column=1)
         self.e3.grid(row=2, column=1)
         self.e4.grid(row=3, column=1)
         self.e5.grid(row=4, column=1)
+        self.e6.grid(row=5, column=1)
 
         self.e1.bind("<<ComboboxSelected>>", self.update_size)
 
@@ -65,6 +72,7 @@ class ImageParametersDialog(simpledialog.Dialog):
             height = int(self.e5.get())
             pattern = self.e2.get()
             format = self.e3.get()
+            directory = self.e6.get()
 
             if width <= 0 or height <= 0:
                 raise ValueError
@@ -72,18 +80,21 @@ class ImageParametersDialog(simpledialog.Dialog):
             if pattern not in PATTERNS or format not in FORMATS:
                 raise ValueError
 
-            self.result = (width, height, pattern, format)
+            self.result = (width, height, pattern, format, directory)
         except ValueError:
             messagebox.showerror("Error", "Ungültige Eingabe. Bitte erneut versuchen.")
             self.result = None
 
 
-def create_image(width, height, pattern, format):
+def create_image(width, height, pattern, format, img_folder=None):
     image = Image.new('RGB', (width, height))
     draw = ImageDraw.Draw(image)
     pattern_name = ''
     date_str = datetime.datetime.now().strftime('%Y%m%d')
-    image_folder = "/Ziel_Verzeichniss"
+    if (img_folder is None) | (len(img_folder) == 0):
+        image_folder = f'{os.getcwd()}/Ziel_Verzeichniss'
+    else:
+        image_folder = img_folder
 
     if pattern == 'Kacheln':
         draw_image_tiles(draw, width, height)
@@ -135,6 +146,8 @@ def create_image(width, height, pattern, format):
             os.makedirs(image_folder)
         image_path = f"{image_folder}/{date_str}-Testbild-{pattern_name}-{width}x{height}.{format.lower()}"
         image.save(image_path, format)
+
+
 def draw_image_tiles(draw, width, height):
     tile_size = 5
     for i in range(height):
@@ -143,6 +156,7 @@ def draw_image_tiles(draw, width, height):
                 draw.point((j, i), fill=(0, 0, 0))
             else:
                 draw.point((j, i), fill=(255, 255, 255))
+
 
 def draw_image_stripes(draw, width, height):
     stripe_width = 5
@@ -153,30 +167,36 @@ def draw_image_stripes(draw, width, height):
             else:
                 draw.point((j, i), fill=(255, 255, 255))
 
+
 def draw_image_white(draw, width, height):
     for i in range(height):
         for j in range(width):
             draw.point((j, i), fill=(255, 255, 255))
+
 
 def draw_image_black(draw, width, height):
     for i in range(height):
         for j in range(width):
             draw.point((j, i), fill=(0, 0, 0))
 
+
 def draw_image_red(draw, width, height):
     for i in range(height):
         for j in range(width):
             draw.point((j, i), fill=(255, 0, 0))
+
 
 def draw_image_green(draw, width, height):
     for i in range(height):
         for j in range(width):
             draw.point((j, i), fill=(0, 255, 0))
 
+
 def draw_image_blue(draw, width, height):
     for i in range(height):
         for j in range(width):
             draw.point((j, i), fill=(0, 0, 255))
+
 
 def draw_image_cross(draw, width, height):
     frame_distance1 = 0
@@ -215,6 +235,7 @@ def draw_image_flicker(draw, width, height):
         for j in range(width):
             draw.point((j, i), fill=tuple(image_data[i, j]))
 
+
 def draw_image_gamma(draw, width, height):
     # Definiere die Anzahl der Streifen
     num_strips = 4
@@ -241,6 +262,7 @@ def draw_image_gamma(draw, width, height):
         y_start = strip_height * num_strips
         draw.rectangle([(0, y_start), (width, height)], fill=(0, 0, 0))
 
+
 def draw_image_all_gamma(width, height, image_folder, date_str, image_format):
     # Der Pfad für das Unterverzeichnis 'Gammabilder' relativ zum übergebenen 'image_folder'
     gamma_images_path = os.path.join(image_folder, 'Gammabilder')
@@ -259,9 +281,9 @@ def draw_image_all_gamma(width, height, image_folder, date_str, image_format):
         image.save(image_path)
 
 
-def create_all_images(width, height, format):
+def create_all_images(width, height, format, directory=None):
     for pattern in PATTERNS[:-1]:  # Exclude 'Alle'
-        create_image(width, height, pattern, format)
+        create_image(width, height, pattern, format, directory)
 
 
 def position_window(root):
@@ -292,12 +314,13 @@ def create_test_image():
         if dialog.result is None:
             break
 
-        width, height, pattern, format = dialog.result
+        width, height, pattern, format, directory = dialog.result
 
         if pattern == 'Alle':
-            create_all_images(width, height, format)
+            create_all_images(width, height, format, directory)
         else:
-            create_image(width, height, pattern, format)
+            create_image(width, height, pattern, format, directory)
 
 
-create_test_image()
+if __name__ == '__main__':
+    create_test_image()
