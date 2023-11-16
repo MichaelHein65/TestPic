@@ -44,8 +44,7 @@ class ImageParametersDialog(simpledialog.Dialog):
         self.e3 = ttk.Combobox(master, values=FORMATS, textvariable=self.format_var)
         self.e4 = tk.Entry(master, textvariable=self.width_var)
         self.e5 = tk.Entry(master, textvariable=self.height_var)
-        dir = tk.filedialog.askdirectory(title='Select directory to save image')
-        self.directory.set(dir)
+        self.directory.set(tk.filedialog.askdirectory(title='Select directory to save image'))
         self.e6 = tk.Entry(master, textvariable=self.directory)
 
         self.e1.grid(row=0, column=1)
